@@ -31,6 +31,7 @@ struct Settings
 
 	bool wvw_detailed_enabled;
 	std::string msg_format;
+	bool sort_logs_by_type;
 	int recent_minutes;
 	bool gw2bot_enabled;
 	std::string gw2bot_key;
@@ -46,6 +47,7 @@ inline constexpr char* INI_SECTION_SETTINGS = "Settings";
 inline constexpr char* INI_WVW_DETAILED_SETTING = "WvW_Detailed";
 inline constexpr char* INI_MSG_FORMAT = "Msg_Format";
 inline constexpr char* INI_RECENT_MINUTES = "Recent_Minutes";
+inline constexpr char* INI_SORT_LOGS_BY_TYPE = "Sort_Logs_By_Type";
 inline constexpr char* INI_GW2BOT_ENABLED = "GW2Bot_Enabled";
 inline constexpr char* INI_GW2BOT_KEY = "GW2Bot_Key";
 inline constexpr char* INI_GW2BOT_SUCCESS_ONLY = "GW2Bot_Success_Only";

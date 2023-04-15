@@ -16,6 +16,7 @@ void Settings::load() {
             INI_SECTION_SETTINGS, INI_WVW_DETAILED_SETTING, false);
         msg_format = ini.GetValue(INI_SECTION_SETTINGS, INI_MSG_FORMAT, "@1 - \\n*@2*\\n\\n");
         recent_minutes = ini.GetLongValue(INI_SECTION_SETTINGS, INI_RECENT_MINUTES, 150);
+        sort_logs_by_type = ini.SetBoolValue(INI_SECTION_SETTINGS, INI_SORT_LOGS_BY_TYPE, false);
         gw2bot_enabled =
             ini.GetBoolValue(INI_SECTION_SETTINGS, INI_GW2BOT_ENABLED, false);
 
@@ -55,6 +56,7 @@ void Settings::save() {
                      wvw_detailed_enabled);
     ini.SetValue(INI_SECTION_SETTINGS, INI_MSG_FORMAT, msg_format.c_str());
     ini.SetLongValue(INI_SECTION_SETTINGS, INI_RECENT_MINUTES, recent_minutes);
+    ini.SetBoolValue(INI_SECTION_SETTINGS, INI_SORT_LOGS_BY_TYPE, sort_logs_by_type);
     ini.SetBoolValue(INI_SECTION_SETTINGS, INI_GW2BOT_ENABLED, gw2bot_enabled);
     ini.SetValue(INI_SECTION_SETTINGS, INI_GW2BOT_KEY, gw2bot_key.c_str());
     ini.SetBoolValue(INI_SECTION_SETTINGS, INI_GW2BOT_SUCCESS_ONLY,

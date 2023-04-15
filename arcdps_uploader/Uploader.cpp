@@ -308,44 +308,39 @@ void Uploader::imgui_draw_logs() {
     ImGui::SameLine();
 
     if (ImGui::Button("Copy & Format Selected")) {
-        std::time_t now = std::time(nullptr);
-        std::tm* local = std::localtime(&now);
-        char buf[64];
-        strftime(buf, 64, "__**%b %d %Y**__\n\n", local);
-
-        std::string msg(buf);
-
+        std::vector<Log> output_logs;
         for (int i = 0; i < logs.size(); ++i) {
             if (selected[i]) {
-                const Log& s = logs.at(i);
-                msg += format_msg(s);
+                output_logs.push_back(logs.at(i));
             }
         }
+        std::string msg = build_msg(output_logs);
         ImGui::SetClipboardText(msg.c_str());
     }
 
     ImGui::SameLine();
 
     if (ImGui::Button("Copy & Format Recent Clears")) {
-        std::time_t now = std::time(nullptr);
-        std::tm* local = std::localtime(&now);
-        char buf[64];
-        strftime(buf, 64, "__**%b %d %Y**__\n\n", local);
-
-        std::string msg(buf);
+        std::string msg;
 
         std::chrono::system_clock::time_point current =
             std::chrono::system_clock::now();
         std::chrono::system_clock::time_point past =
             current - std::chrono::minutes(settings.recent_minutes);
+        
+        std::vector<Log> output_logs;
         for (int i = 0; i < logs.size(); ++i) {
             const Log& s = logs.at(i);
             if (s.uploaded && s.success) {
                 if (s.time > past) {
-                    msg += format_msg(s);
+                    output_logs.push_back(s);
                 }
             }
         }
+
+        msg = build_msg(output_logs);
+
+
         ImGui::SetClipboardText(msg.c_str());
     }
 
@@ -718,6 +713,16 @@ void Uploader::imgui_draw_options() {
             ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.25f);
             ImGui::InputInt("# of minutes back for recent clears", &settings.recent_minutes);
             ImGui::PopItemWidth();
+
+            ImGui::Checkbox("Group & Order by Content Type",
+                &settings.sort_logs_by_type);
+            if (ImGui::IsItemHovered()) {
+                ImGui::BeginTooltip();
+                ImGui::Text(
+                    "Generates output grouped by content type and sorted "
+                    "by standard order");
+                ImGui::EndTooltip();
+            }
 
             ImGui::TreePop();
         }
@@ -1350,5 +1355,101 @@ std::string Uploader::format_msg(Log log) {
     msg = std::regex_replace(msg, std::regex("@1"), log.boss_name);
     msg = std::regex_replace(msg, std::regex("@2"), log.permalink);
     msg = std::regex_replace(msg, std::regex("@3"), std::to_string(log.boss_id));
+    msg += "\n";
+    return msg;
+}
+
+std::string Uploader::build_msg(std::vector<Log> logs) {
+    std::time_t now = std::time(nullptr);
+    std::tm* local = std::localtime(&now);
+    char buf[64];
+    strftime(buf, 64, "__**%b %d %Y**__\n\n", local);
+
+    std::string msg(buf);
+
+    if (settings.sort_logs_by_type) {
+        return build_sorted_msg(logs, msg);
+    }
+
+    for (Log l : logs) {
+        msg += format_msg(l);
+    }
+    return msg;
+
+}
+
+std::string Uploader::build_sorted_msg(std::vector<Log> logs, std::string msg = "") {
+    std::vector<Log> raids;
+    std::vector<Log> strikes;
+    std::vector<Log> fractals;
+    std::vector<Log> other;
+
+    for (Log l : logs) {
+        if (std::find(raid_order.begin(), raid_order.end(), l.boss_id) != raid_order.end()) {
+            raids.push_back(l);
+        } else if (std::find(strike_order.begin(), strike_order.end(), l.boss_id) != strike_order.end()) {
+            strikes.push_back(l);
+        } else if (std::find(fractal_order.begin(), fractal_order.end(), l.boss_id) != fractal_order.end()) {
+            fractals.push_back(l);
+        } else {
+            other.push_back(l);
+        }
+    }
+
+    bool spacer = false;
+
+    if (!raids.empty()) {
+        spacer = true;
+        msg += "__Raids__\n";
+        for (int i : raid_order) {
+            for (Log l : raids) {
+                if (l.boss_id == i) {
+                    msg += format_msg(l);
+                }
+            }
+        }
+        if (spacer) {
+            msg += "\n";
+        }
+    }
+
+    if (!strikes.empty()) {
+        spacer = true;
+        msg += "__Strikes__\n";
+        for (int i : strike_order) {
+            for (Log l : strikes) {
+                if (l.boss_id == i) {
+                    msg += format_msg(l);
+                }
+            }
+        }
+        if (spacer) {
+            msg += "\n";
+        }
+    }
+
+
+    if (!fractals.empty()) {
+        spacer = true;
+        msg += "__Fractal CMs__\n";
+        for (int i : fractal_order) {
+            for (Log l : fractals) {
+                if (l.boss_id == i) {
+                    msg += format_msg(l);
+                }
+            }
+        }
+        if (spacer) {
+            msg += "\n";
+        }
+    }
+
+    if (!other.empty()) {
+        msg += "__Other__\n";
+        for (Log l : other) {
+            msg += format_msg(l);
+        }
+    }
+
     return msg;
 }
